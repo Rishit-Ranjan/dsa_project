@@ -14,20 +14,53 @@ public class App extends JPanel implements ActionListener, KeyListener {
     private Point food;
     private char direction;
     private boolean isGameOver;
+    private boolean isGameStarted;
     private Timer timer;
     private Random random;
+    private JButton startButton;
+    private JButton restartButton;  // Add this line
 
     public App() {
         setPreferredSize(new Dimension(BOARD_WIDTH * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE));
         setBackground(Color.BLACK);
         setFocusable(true);
         addKeyListener(this);
+        setLayout(null);  // Add this line
         
-        initGame();
+        // Add start button
+        startButton = new JButton("Start Game");
+        startButton.setBounds((BOARD_WIDTH * CELL_SIZE - 100) / 2, 
+                            (BOARD_HEIGHT * CELL_SIZE - 30) / 2, 
+                            100, 30);
+        startButton.addActionListener(e -> {
+            startButton.setVisible(false);
+            isGameStarted = true;
+            initGame();
+            requestFocusInWindow();
+        });
+        add(startButton);
+        
+        // Add restart button
+        restartButton = new JButton("Restart");
+        restartButton.setBounds((BOARD_WIDTH * CELL_SIZE - 100) / 2,
+                        (BOARD_HEIGHT * CELL_SIZE) / 2 + 40,
+                        100, 30);
+        restartButton.addActionListener(e -> {
+            restartButton.setVisible(false);
+            startButton.setVisible(false);
+            isGameStarted = true;
+            initGame();
+            requestFocusInWindow();
+        });
+        restartButton.setVisible(false);
+        add(restartButton);
+        
+        isGameStarted = false;
+        snake = new ArrayList<>();
     }
 
     private void initGame() {
-        snake = new ArrayList<>();
+        snake.clear();
         snake.add(new Point(BOARD_WIDTH/2, BOARD_HEIGHT/2));
         direction = 'R';
         random = new Random();
@@ -83,6 +116,10 @@ public class App extends JPanel implements ActionListener, KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        if (!isGameStarted) {
+            return;
+        }
+
         // Draw snake
         g.setColor(Color.GREEN);
         for (Point p : snake) {
@@ -101,7 +138,11 @@ public class App extends JPanel implements ActionListener, KeyListener {
             String msg = "Game Over! Score: " + (snake.size() - 1);
             g.drawString(msg, 
                 (BOARD_WIDTH * CELL_SIZE - metrics.stringWidth(msg)) / 2, 
-                BOARD_HEIGHT * CELL_SIZE / 2);
+                BOARD_HEIGHT * CELL_SIZE / 2 - 20);
+                
+            // Show only restart button
+            startButton.setVisible(false);
+            restartButton.setVisible(true);
         }
     }
 
@@ -113,6 +154,9 @@ public class App extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (!isGameStarted || isGameOver) {
+            return;
+        }
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
                 if (direction != 'D') direction = 'U';
